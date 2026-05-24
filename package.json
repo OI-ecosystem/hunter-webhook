@@ -1,0 +1,9 @@
+{
+  "name": "hunter-webhook",
+  "version": "1.0.0",
+  "description": "Hunter Intelligence Stripe webhook",
+  "dependencies": {
+    "stripe": "^14.0.0",
+    "resend": "^3.0.0"
+  }
+}
