@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hunter Intelligence — Member Dashboard</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f7f7f5;--bg2:#ffffff;--bg3:#f0efea;
+  --text:#1a1a18;--text2:#5f5e5a;--text3:#9a9994;
+  --border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.15);
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-dark:#085041;
+  --amber:#EF9F27;--amber-bg:#FAEEDA;--amber-dark:#854F0B;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-dark:#791F1F;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-dark:#0C447C;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg3);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh;}
+
+/* ── LOGIN GATE ── */
+.login-page{display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:20px;}
+.login-card{background:var(--bg2);border:0.5px solid var(--border2);
+  border-radius:var(--radius-lg);padding:40px;width:100%;max-width:420px;text-align:center;}
+.login-logo{font-size:22px;font-weight:600;letter-spacing:-0.02em;margin-bottom:8px;}
+.login-logo span{color:var(--green);}
+.login-tagline{font-size:13px;color:var(--text3);margin-bottom:32px;}
+.login-label{font-size:13px;font-weight:500;color:var(--text);text-align:left;
+  display:block;margin-bottom:6px;}
+.login-input{width:100%;padding:12px 16px;border:0.5px solid var(--border2);
+  border-radius:var(--radius);font-size:15px;font-family:inherit;
+  background:var(--bg);color:var(--text);outline:none;
+  text-transform:uppercase;letter-spacing:0.08em;}
+.login-input:focus{border-color:var(--green);}
+.login-btn{width:100%;padding:13px;margin-top:12px;border:none;
+  background:var(--green);color:#fff;border-radius:var(--radius);
+  font-size:15px;font-weight:500;cursor:pointer;font-family:inherit;}
+.login-btn:hover{background:var(--green-dark);}
+.login-error{font-size:13px;color:var(--red);margin-top:10px;display:none;}
+.login-footer{font-size:12px;color:var(--text3);margin-top:24px;line-height:1.6;}
+.login-footer a{color:var(--green);text-decoration:none;}
+.login-days{font-size:12px;color:var(--text2);margin-top:8px;
+  background:var(--green-bg);padding:6px 12px;border-radius:99px;
+  display:inline-block;}
+
+/* ── MAIN DASHBOARD ── */
+.dashboard{display:none;}
+nav{background:var(--text);padding:0 24px;display:flex;
+  align-items:center;justify-content:space-between;height:56px;}
+.nav-logo{font-size:16px;font-weight:600;color:#fff;letter-spacing:-0.02em;}
+.nav-logo span{color:var(--green);}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-tier{font-size:12px;padding:4px 12px;border-radius:99px;font-weight:500;}
+.tier-standard{background:var(--blue-bg);color:var(--blue-dark);}
+.tier-pro{background:var(--green-bg);color:var(--green-dark);}
+.nav-expires{font-size:12px;color:#9a9994;}
+.nav-logout{font-size:12px;color:#9a9994;cursor:pointer;
+  border:0.5px solid rgba(255,255,255,0.15);padding:4px 12px;
+  border-radius:var(--radius);}
+.nav-logout:hover{color:#fff;}
+
+.page{max-width:1100px;margin:0 auto;padding:24px 24px;}
+
+/* STATUS BAR */
+.status-bar{background:var(--green-bg);border:0.5px solid rgba(29,158,117,0.3);
+  border-radius:var(--radius);padding:10px 16px;margin-bottom:24px;
+  display:flex;align-items:center;gap:10px;font-size:13px;color:var(--green-dark);}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+  flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px;}
+.stat{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px;text-align:center;}
+.stat-val{font-size:24px;font-weight:600;}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;
+  text-transform:uppercase;letter-spacing:0.05em;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;
+  border-bottom:0.5px solid var(--border);}
+.tab{padding:8px 16px;font-size:13px;cursor:pointer;border:none;
+  background:none;color:var(--text2);border-bottom:2px solid transparent;
+  margin-bottom:-0.5px;font-family:inherit;}
+.tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:500;}
+.tab:hover:not(.active){color:var(--text);}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* PROTOCOL TABLE */
+.protocol-table{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px;}
+.table-header{background:var(--bg3);padding:10px 16px;display:flex;
+  gap:12px;font-size:11px;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.05em;border-bottom:0.5px solid var(--border);}
+.protocol-row{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border-bottom:0.5px solid var(--border);cursor:pointer;transition:background 0.1s;}
+.protocol-row:last-child{border-bottom:none;}
+.protocol-row:hover{background:var(--bg3);}
+.p-rank{font-size:12px;color:var(--text3);width:20px;text-align:right;flex-shrink:0;}
+.p-name{font-weight:600;font-size:14px;flex:1;}
+.p-chain{font-size:11px;color:var(--text2);background:var(--bg3);
+  padding:2px 9px;border-radius:99px;flex-shrink:0;}
+.p-tvl{font-size:12px;color:var(--text2);width:72px;text-align:right;flex-shrink:0;}
+.p-bar-wrap{display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.p-bar{width:64px;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.p-fill{height:100%;border-radius:2px;}
+.p-score{font-size:13px;font-weight:600;width:28px;text-align:right;}
+.p-conv{font-size:11px;padding:2px 9px;border-radius:99px;
+  flex-shrink:0;width:76px;text-align:center;}
+.conv-high{background:#EAF3DE;color:#3B6D11;}
+.conv-mod{background:#FAEEDA;color:#854F0B;}
+.conv-sup{background:var(--bg3);color:var(--text3);}
+.p-snap{font-size:11px;width:44px;text-align:right;flex-shrink:0;font-weight:500;}
+
+/* DETAIL PANEL */
+.rankings-layout{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+.detail-panel{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;height:fit-content;
+  position:sticky;top:24px;}
+.detail-label{font-size:11px;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:12px;}
+.detail-name{font-size:20px;font-weight:600;margin-bottom:4px;}
+.detail-chain{font-size:13px;color:var(--text2);margin-bottom:16px;}
+.detail-score-row{display:flex;align-items:baseline;gap:8px;margin-bottom:16px;}
+.detail-score{font-size:36px;font-weight:600;}
+.detail-score-max{font-size:16px;color:var(--text3);}
+.detail-factors{margin-bottom:16px;}
+.factor-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.factor-label{font-size:12px;color:var(--text2);width:100px;}
+.factor-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.factor-fill{height:100%;border-radius:2px;}
+.factor-val{font-size:12px;font-weight:500;width:32px;text-align:right;}
+.detail-divider{border:none;border-top:0.5px solid var(--border);margin:14px 0;}
+.detail-action-label{font-size:11px;color:var(--text3);text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:8px;}
+.detail-action{font-size:13px;color:var(--text);line-height:1.6;}
+.detail-deadline{font-size:12px;font-weight:500;color:var(--red);
+  margin-top:8px;padding:4px 10px;background:var(--red-bg);
+  border-radius:99px;display:inline-block;}
+.detail-placeholder{font-size:13px;color:var(--text3);
+  text-align:center;padding:40px 0;}
+
+/* AI BRIEFING */
+.briefing-card{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:28px;margin-bottom:16px;}
+.briefing-meta{font-size:12px;color:var(--text3);margin-bottom:16px;
+  display:flex;align-items:center;gap:10px;}
+.ai-badge{font-size:11px;background:var(--green-bg);color:var(--green-dark);
+  padding:2px 8px;border-radius:99px;font-weight:500;}
+.briefing-text{font-size:15px;color:var(--text);line-height:1.75;}
+.briefing-text p{margin-bottom:14px;}
+.briefing-text p:last-child{margin-bottom:0;}
+
+/* ROI CALCULATOR */
+.roi-controls{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+.roi-ctrl-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.roi-ctrl-row:last-child{margin-bottom:0;}
+.roi-ctrl-label{font-size:13px;color:var(--text2);width:160px;flex-shrink:0;}
+.roi-ctrl-slider{flex:1;}
+.roi-ctrl-val{font-size:13px;font-weight:600;width:80px;text-align:right;}
+.roi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.roi-card{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px;}
+.roi-card-name{font-size:14px;font-weight:600;margin-bottom:12px;}
+.roi-row{display:flex;justify-content:space-between;padding:5px 0;
+  border-bottom:0.5px solid var(--border);font-size:13px;}
+.roi-row:last-of-type{border-bottom:none;}
+.roi-label{color:var(--text2);}
+.roi-breakeven{margin-top:10px;padding:8px 12px;border-radius:var(--radius);
+  font-size:12px;display:flex;justify-content:space-between;align-items:center;}
+
+/* SNAPSHOT */
+.snap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.snap-card{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px;}
+.snap-name{font-size:14px;font-weight:600;margin-bottom:10px;}
+.snap-prob-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.snap-circle{width:52px;height:52px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+.snap-text{font-size:12px;color:var(--text2);line-height:1.5;}
+.snap-signals{display:flex;flex-direction:column;gap:4px;}
+.snap-signal{font-size:11px;display:flex;align-items:center;gap:5px;color:var(--text2);}
+.snap-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+
+/* CORRELATION */
+.heatmap-wrap{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;overflow-x:auto;}
+table.heatmap{border-collapse:collapse;font-size:12px;}
+table.heatmap th{font-weight:500;color:var(--text2);padding:4px 6px;text-align:center;}
+table.heatmap th.row-hdr{text-align:right;padding-right:10px;
+  color:var(--text);font-weight:600;}
+table.heatmap td{width:34px;height:30px;text-align:center;
+  border-radius:3px;font-size:11px;font-weight:500;}
+.heatmap-note{font-size:12px;color:var(--text3);margin-top:12px;line-height:1.55;}
+
+/* WHALE */
+.whale-feed{display:flex;flex-direction:column;gap:8px;}
+.whale-card{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:16px;display:flex;gap:14px;}
+.whale-icon{font-size:22px;flex-shrink:0;}
+.whale-body{flex:1;}
+.whale-title{font-size:14px;font-weight:600;margin-bottom:4px;}
+.whale-detail{font-size:13px;color:var(--text2);margin-bottom:4px;line-height:1.5;}
+.whale-addr{font-family:monospace;font-size:11px;color:var(--text3);}
+.whale-meta{text-align:right;flex-shrink:0;}
+.whale-time{font-size:11px;color:var(--text3);margin-bottom:4px;}
+.whale-sig{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:500;}
+.sig-strong{background:var(--green-bg);color:var(--green-dark);}
+.sig-mod{background:var(--amber-bg);color:var(--amber-dark);}
+
+/* ACCOUNT */
+.account-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.account-card{background:var(--bg2);border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);padding:20px;}
+.account-card-title{font-size:14px;font-weight:600;margin-bottom:16px;}
+.account-row{display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px;}
+.account-row:last-child{border-bottom:none;}
+.account-key{color:var(--text2);}
+.account-val{font-weight:500;}
+.upgrade-card{background:var(--green-bg);border:0.5px solid rgba(29,158,117,0.3);
+  border-radius:var(--radius-lg);padding:20px;margin-top:16px;}
+.upgrade-title{font-size:15px;font-weight:600;color:var(--green-dark);margin-bottom:8px;}
+.upgrade-text{font-size:13px;color:var(--green-dark);margin-bottom:14px;line-height:1.55;}
+.upgrade-btn{padding:10px 20px;background:var(--green);color:#fff;
+  border:none;border-radius:var(--radius);font-size:13px;font-weight:500;
+  cursor:pointer;font-family:inherit;}
+
+footer{border-top:0.5px solid var(--border);padding:20px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--text3);max-width:1100px;margin:0 auto;}
+
+@media(max-width:768px){
+  .stats-row{grid-template-columns:repeat(3,1fr);}
+  .rankings-layout{grid-template-columns:1fr;}
+  .roi-grid,.snap-grid,.account-grid{grid-template-columns:1fr 1fr;}
+  .detail-panel{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE ══ -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-logo">Hunter<span>.</span>Intelligence</div>
+    <div class="login-tagline">Member access — enter your access code to continue</div>
+
+    <label class="login-label" for="code-input">Access code</label>
+    <input type="text" id="code-input" class="login-input"
+           placeholder="HUNT-XXXX-XXXX"
+           maxlength="14"
+           oninput="formatCode(this)"
+           onkeydown="if(event.key==='Enter')validateCode()">
+    <button class="login-btn" id="login-btn" onclick="validateCode()">Access dashboard</button>
+    <div class="login-error" id="login-error">Invalid or expired access code. Please check and try again.</div>
+
+    <div class="login-footer">
+      Don't have a code? <a href="index.html">Subscribe from £49/month</a><br>
+      Lost your code? <a href="mailto:hello@hunterintelligence.io">Contact support</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="dashboard" id="dashboard">
+  <nav>
+    <div class="nav-logo">Hunter<span>.</span>Intelligence</div>
+    <div class="nav-right">
+      <span class="nav-tier" id="nav-tier">Standard</span>
+      <span class="nav-expires" id="nav-expires"></span>
+      <span class="nav-logout" onclick="logout()">Sign out</span>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span id="status-text">Loading live intelligence...</span>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="stat-val">20</div><div class="stat-label">Protocols scored</div></div>
+      <div class="stat"><div class="stat-val" id="stat-above">—</div><div class="stat-label">Above threshold</div></div>
+      <div class="stat"><div class="stat-val" id="stat-urgent">—</div><div class="stat-label">Urgent this week</div></div>
+      <div class="stat"><div class="stat-val" id="stat-tvl">3</div><div class="stat-label">Live TVL feeds</div></div>
+      <div class="stat"><div class="stat-val" id="stat-updated">—</div><div class="stat-label">Last updated</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('rankings',this)">Protocol Rankings</button>
+      <button class="tab" onclick="switchTab('briefing',this)">AI Briefing</button>
+      <button class="tab" onclick="switchTab('roi',this)">ROI Calculator</button>
+      <button class="tab" onclick="switchTab('snapshot',this)">Snapshot Probability</button>
+      <button class="tab" onclick="switchTab('correlation',this)">Correlation</button>
+      <button class="tab" onclick="switchTab('whales',this)">Whale Tracker</button>
+      <button class="tab" onclick="switchTab('account',this)">My Account</button>
+    </div>
+
+    <!-- RANKINGS -->
+    <div class="panel active" id="panel-rankings">
+      <div class="rankings-layout">
+        <div>
+          <div class="protocol-table">
+            <div class="table-header">
+              <span style="width:20px;">#</span>
+              <span style="flex:1;">Protocol</span>
+              <span style="width:110px;">Chain</span>
+              <span style="width:72px;text-align:right;">TVL</span>
+              <span style="width:100px;">Score</span>
+              <span style="width:76px;text-align:center;">Signal</span>
+              <span style="width:44px;text-align:right;">Snap%</span>
+            </div>
+            <div id="protocol-list"></div>
+          </div>
+        </div>
+        <div class="detail-panel">
+          <div class="detail-label">Protocol detail</div>
+          <div id="detail-content">
+            <div class="detail-placeholder">Click any protocol row to see full breakdown</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI BRIEFING -->
+    <div class="panel" id="panel-briefing">
+      <div class="briefing-card">
+        <div class="briefing-meta">
+          <span class="ai-badge">Claude Haiku · Hunter Intelligence</span>
+          <span id="briefing-ts"></span>
+        </div>
+        <div class="briefing-text" id="briefing-text">
+          <p style="color:var(--text3);">Loading AI briefing...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROI CALCULATOR -->
+    <div class="panel" id="panel-roi">
+      <div class="roi-controls">
+        <div class="roi-ctrl-row">
+          <span class="roi-ctrl-label">ETH price (USD)</span>
+          <input type="range" class="roi-ctrl-slider" id="eth-price"
+                 min="1000" max="10000" value="3800" step="100"
+                 oninput="updateROI()">
+          <span class="roi-ctrl-val" id="eth-val">$3,800</span>
+        </div>
+        <div class="roi-ctrl-row">
+          <span class="roi-ctrl-label">Gas price (gwei)</span>
+          <input type="range" class="roi-ctrl-slider" id="gas-gwei"
+                 min="5" max="200" value="28" step="1"
+                 oninput="updateROI()">
+          <span class="roi-ctrl-val" id="gas-val">28 gwei</span>
+        </div>
+        <div class="roi-ctrl-row">
+          <span class="roi-ctrl-label">Wallets farming</span>
+          <input type="range" class="roi-ctrl-slider" id="wallets"
+                 min="1" max="20" value="5" step="1"
+                 oninput="updateROI()">
+          <span class="roi-ctrl-val" id="wallet-val">5 wallets</span>
+        </div>
+      </div>
+      <div class="roi-grid" id="roi-grid"></div>
+    </div>
+
+    <!-- SNAPSHOT -->
+    <div class="panel" id="panel-snapshot">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+        Probability that each protocol's airdrop snapshot is still upcoming vs already taken.
+        Based on on-chain activity patterns, team communications, and historical launch timing.
+      </p>
+      <div class="snap-grid" id="snap-grid"></div>
+    </div>
+
+    <!-- CORRELATION -->
+    <div class="panel" id="panel-correlation">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+        30-day TVL correlation across top 10 protocols. Diversify across uncorrelated positions to reduce cycle risk.
+      </p>
+      <div class="heatmap-wrap">
+        <div id="heatmap"></div>
+        <div class="heatmap-note">Green = protocols that move together. Diversify across uncorrelated protocols to reduce cycle risk.</div>
+      </div>
+    </div>
+
+    <!-- WHALES -->
+    <div class="panel" id="panel-whales">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+        Sophisticated airdrop farmer wallet activity. When smart money moves, it usually means something.
+      </p>
+      <div class="whale-feed" id="whale-feed"></div>
+    </div>
+
+    <!-- ACCOUNT -->
+    <div class="panel" id="panel-account">
+      <div class="account-grid">
+        <div class="account-card">
+          <div class="account-card-title">Subscription</div>
+          <div class="account-row">
+            <span class="account-key">Plan</span>
+            <span class="account-val" id="acc-plan">—</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Access code</span>
+            <span class="account-val" id="acc-code" style="font-family:monospace;font-size:12px;">—</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Access expires</span>
+            <span class="account-val" id="acc-expires">—</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Days remaining</span>
+            <span class="account-val" id="acc-days" style="color:var(--green);">—</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Protocols visible</span>
+            <span class="account-val" id="acc-protocols">—</span>
+          </div>
+        </div>
+        <div class="account-card">
+          <div class="account-card-title">Support</div>
+          <div class="account-row">
+            <span class="account-key">Email</span>
+            <span class="account-val">hello@hunterintelligence.io</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Telegram</span>
+            <span class="account-val">@HunterIntelBot</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Updates</span>
+            <span class="account-val">Every Monday 07:00 UTC</span>
+          </div>
+          <div class="account-row">
+            <span class="account-key">Data refresh</span>
+            <span class="account-val">Every 6 hours</span>
+          </div>
+        </div>
+      </div>
+      <div class="upgrade-card" id="upgrade-card" style="display:none;">
+        <div class="upgrade-title">Upgrade to Pro — £149/month</div>
+        <div class="upgrade-text">
+          You're on Standard. Pro adds all 20 protocols, full 7-factor breakdowns,
+          mid-week urgent alerts, API access to scores, and Telegram DM support.
+        </div>
+        <button class="upgrade-btn" onclick="window.open('index.html','_blank')">
+          Upgrade to Pro
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end .page -->
+
+  <footer>
+    <span>Hunter Intelligence · Sentinel v2.0</span>
+    <span>Intelligence only. No custody. No wallets. No keys.</span>
+    <span id="footer-ts"></span>
+  </footer>
+</div>
+
+<script>
+// ── PROTOCOL DATA ──
+const PROTOCOLS = [
+  {name:"Miden",chain:"Ethereum ZK",score:78,conviction:"HIGH",urgent:true,
+   deadline:"Snapshot closing",snapshotProb:82,tvl:null,gasUnits:120000,chainKey:"eth",
+   factors:{timing:22,tvl:14,investors:18,team:12,social:4,onchain:8},
+   note:"ZK rollup. a16z + Coinbase. Snapshot closing — deploy test contract, bridge assets, 3+ transactions NOW."},
+  {name:"MegaETH",chain:"MegaETH",score:75,conviction:"HIGH",urgent:true,
+   deadline:"Daily check-in",snapshotProb:91,tvl:null,gasUnits:60000,chainKey:"l2",
+   factors:{timing:20,tvl:12,investors:18,team:13,social:5,onchain:7},
+   note:"Real-time EVM. $107M raised. Daily check-in required — miss a day, miss the streak."},
+  {name:"Monad",chain:"Monad",score:72,conviction:"HIGH",urgent:false,
+   deadline:null,snapshotProb:88,tvl:null,gasUnits:80000,chainKey:"l2",
+   factors:{timing:19,tvl:11,investors:20,team:12,social:5,onchain:5},
+   note:"$244M raised. Testnet live. Faucet daily, swap on testnet DEX."},
+  {name:"Base L2",chain:"Ethereum L2",score:67,conviction:"HIGH",urgent:false,
+   deadline:null,snapshotProb:74,tvl:null,gasUnits:65000,chainKey:"l2",
+   factors:{timing:15,tvl:18,investors:18,team:8,social:4,onchain:4},
+   note:"Coinbase moat. 46% of all L2 TVL. Token rumoured 2026. Use Aerodrome, bridge via Base Bridge."},
+  {name:"Polymarket",chain:"Polygon",score:65,conviction:"HIGH",urgent:false,
+   deadline:null,snapshotProb:68,tvl:"$460M",gasUnits:55000,chainKey:"polygon",
+   factors:{timing:15,tvl:14,investors:16,team:10,social:5,onchain:5},
+   note:"Token confirmed. $9B valuation. Make real predictions on active markets."},
+  {name:"Morpho",chain:"Ethereum",score:63,conviction:"HIGH",urgent:false,
+   deadline:null,snapshotProb:61,tvl:"$15.2B",gasUnits:140000,chainKey:"eth",
+   factors:{timing:15,tvl:16,investors:18,team:8,social:3,onchain:3},
+   note:"$6.5B TVL. No token. Paradigm-backed. Supply USDC or WETH."},
+  {name:"Aster Stage 6",chain:"BNB Chain",score:62,conviction:"MODERATE",urgent:true,
+   deadline:"June 4 2026",snapshotProb:45,tvl:null,gasUnits:70000,chainKey:"bnb",
+   factors:{timing:18,tvl:10,investors:14,team:9,social:4,onchain:7},
+   note:"Claim window closes June 4. PRIORITY: claim immediately if eligible."},
+  {name:"Hyperliquid",chain:"HyperEVM",score:61,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:55,tvl:"$5.5B",gasUnits:50000,chainKey:"l2",
+   factors:{timing:15,tvl:13,investors:14,team:10,social:4,onchain:5},
+   note:"40% supply reserved. Trade on HyperEVM, use Felix Protocol."},
+  {name:"MetaMask",chain:"Ethereum",score:61,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:52,tvl:null,gasUnits:95000,chainKey:"eth",
+   factors:{timing:15,tvl:12,investors:16,team:10,social:4,onchain:4},
+   note:"30M+ users. No token. Use MetaMask Swaps regularly."},
+  {name:"Aerodrome",chain:"Base",score:60,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:44,tvl:null,gasUnits:72000,chainKey:"l2",
+   factors:{timing:15,tvl:14,investors:12,team:9,social:4,onchain:5},
+   note:"Base dominant DEX. Lock veAERO for governance. Provide USDC/ETH liquidity."},
+  {name:"Ink (Kraken)",chain:"Ethereum L2",score:60,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:79,tvl:null,gasUnits:68000,chainKey:"l2",
+   factors:{timing:16,tvl:10,investors:16,team:9,social:4,onchain:3},
+   note:"Confirmed $INK airdrop. Bridge to Ink L2, interact with dApps."},
+  {name:"Variational",chain:"Ethereum",score:57,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:83,tvl:null,gasUnits:110000,chainKey:"eth",
+   factors:{timing:19,tvl:8,investors:16,team:8,social:3,onchain:3},
+   note:"$11.8M Bain+Coinbase. 50% community allocation confirmed."},
+  {name:"Farcaster",chain:"Base",score:56,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:41,tvl:null,gasUnits:45000,chainKey:"l2",
+   factors:{timing:15,tvl:8,investors:15,team:9,social:5,onchain:4},
+   note:"Post on Warpcast, collect frames, hold native NFTs."},
+  {name:"Glider",chain:"Base",score:55,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:86,tvl:null,gasUnits:60000,chainKey:"l2",
+   factors:{timing:20,tvl:7,investors:16,team:7,social:3,onchain:2},
+   note:"a16z backed portfolio automation on Base. Points live."},
+  {name:"TreadFi",chain:"Ethereum",score:57,conviction:"MODERATE",urgent:true,
+   deadline:"Season 1 ends soon",snapshotProb:89,tvl:null,gasUnits:85000,chainKey:"eth",
+   factors:{timing:21,tvl:7,investors:14,team:8,social:3,onchain:4},
+   note:"$3.5M Founders Fund. Season 1 active — use the trading terminal now."},
+  {name:"Felix Protocol",chain:"HyperEVM",score:56,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:76,tvl:null,gasUnits:55000,chainKey:"l2",
+   factors:{timing:19,tvl:8,investors:13,team:8,social:3,onchain:5},
+   note:"Liquity fork on HyperEVM. Season 2 points live."},
+  {name:"Loopscale",chain:"Solana",score:59,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:71,tvl:null,gasUnits:30000,chainKey:"l2",
+   factors:{timing:18,tvl:9,investors:15,team:9,social:4,onchain:4},
+   note:"Solana lending. Deposit SOL or USDC, maintain active position."},
+  {name:"Backpack",chain:"Solana",score:53,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:58,tvl:null,gasUnits:20000,chainKey:"l2",
+   factors:{timing:17,tvl:7,investors:15,team:9,social:4,onchain:3},
+   note:"Exchange + wallet. Top-tier airdrop ranking confirmed. Trade regularly."},
+  {name:"Extended",chain:"Ethereum",score:53,conviction:"MODERATE",urgent:false,
+   deadline:null,snapshotProb:64,tvl:null,gasUnits:90000,chainKey:"eth",
+   factors:{timing:18,tvl:6,investors:14,team:8,social:3,onchain:4},
+   note:"Perp DEX. 30% supply airdrop confirmed. Points ongoing."},
+  {name:"Superposition",chain:"Arbitrum L2",score:52,conviction:"SUPPRESS",urgent:false,
+   deadline:null,snapshotProb:77,tvl:null,gasUnits:70000,chainKey:"l2",
+   factors:{timing:19,tvl:6,investors:16,team:7,social:3,onchain:1},
+   note:"a16z/Coinbase/GSR backed. Below threshold — monitor only."},
+];
+
+// ── ACCESS CODE SYSTEM ──
+// Format: HUNT-XXXX-XXXX
+// Tier encoded in code prefix: S=Standard, P=Pro
+// Expiry encoded in code
+
+const DEMO_CODES = {
+  // Standard tier — 30 days
+  "HUNT-S001-2026": { tier:"Standard", expires:"2026-06-22", protocols:10 },
+  "HUNT-S002-2026": { tier:"Standard", expires:"2026-06-22", protocols:10 },
+  "HUNT-S003-2026": { tier:"Standard", expires:"2026-06-22", protocols:10 },
+  // Pro tier — 30 days
+  "HUNT-P001-2026": { tier:"Pro",      expires:"2026-06-22", protocols:20 },
+  "HUNT-P002-2026": { tier:"Pro",      expires:"2026-06-22", protocols:20 },
+  // Demo code — always works
+  "HUNT-DEMO-0001": { tier:"Standard", expires:"2026-12-31", protocols:10 },
+};
+
+let SESSION = null;
+
+function formatCode(input) {
+  let v = input.value.replace(/[^A-Z0-9]/gi,'').toUpperCase();
+  if(v.length>4)  v = v.slice(0,4)+'-'+v.slice(4);
+  if(v.length>9)  v = v.slice(0,9)+'-'+v.slice(9);
+  if(v.length>14) v = v.slice(0,14);
+  input.value = v;
+}
+
+async function validateCode() {
+  const raw = document.getElementById('code-input').value.trim().toUpperCase();
+  const err = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  if(!raw) {
+    err.style.display='block';
+    err.textContent='Please enter your access code.';
+    return;
+  }
+
+  // Show loading state
+  btn.textContent='Validating...';
+  btn.disabled=true;
+  err.style.display='none';
+
+  try {
+    const response = await fetch('/api/validate-code', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code: raw })
+    });
+
+    const data = await response.json();
+
+    if(!data.valid) {
+      err.style.display='block';
+      err.textContent = data.error || 'Invalid access code. Please check and try again.';
+      btn.textContent='Access dashboard';
+      btn.disabled=false;
+      return;
+    }
+
+    // Valid — store session
+    SESSION = {
+      code: raw,
+      tier: data.tier,
+      protocols: data.protocols,
+      expires: data.expires,
+      daysLeft: data.daysLeft,
+    };
+    localStorage.setItem('hunter_session', JSON.stringify(SESSION));
+    showDashboard();
+
+  } catch(e) {
+    err.style.display='block';
+    err.textContent='Connection error. Please try again.';
+    btn.textContent='Access dashboard';
+    btn.disabled=false;
+  }
+}
+
+function checkExistingSession() {
+  try {
+    const stored = localStorage.getItem('hunter_session');
+    if(!stored) return false;
+    SESSION = JSON.parse(stored);
+    // Verify still valid
+    const expires = new Date(SESSION.expires);
+    if(expires < new Date()) {
+      localStorage.removeItem('hunter_session');
+      return false;
+    }
+    SESSION.daysLeft = Math.ceil((expires-new Date())/(1000*60*60*24));
+    return true;
+  } catch(e) { return false; }
+}
+
+function logout() {
+  localStorage.removeItem('hunter_session');
+  SESSION = null;
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('code-input').value='';
+}
+
+function showDashboard() {
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+
+  // Set tier display
+  const tierEl = document.getElementById('nav-tier');
+  tierEl.textContent = SESSION.tier;
+  tierEl.className = 'nav-tier ' +
+    (SESSION.tier==='Pro'?'tier-pro':'tier-standard');
+
+  document.getElementById('nav-expires').textContent =
+    `${SESSION.daysLeft} days remaining`;
+
+  // Account tab
+  document.getElementById('acc-plan').textContent = SESSION.tier + ' — £' +
+    (SESSION.tier==='Pro'?'149':'49') + '/month';
+  document.getElementById('acc-code').textContent = SESSION.code;
+  document.getElementById('acc-expires').textContent = SESSION.expires;
+  document.getElementById('acc-days').textContent = SESSION.daysLeft + ' days';
+  document.getElementById('acc-protocols').textContent =
+    SESSION.protocols + ' of 20';
+
+  if(SESSION.tier==='Standard') {
+    document.getElementById('upgrade-card').style.display='block';
+  }
+
+  // Load all data
+  loadDashboard();
+}
+
+// ── HELPERS ──
+function scoreColor(s){ return s>=70?"#1D9E75":s>=55?"#EF9F27":"#888780"; }
+function convClass(c){ return c==="HIGH"?"conv-high":c==="MODERATE"?"conv-mod":"conv-sup"; }
+function fmtUSD(v){ return "$"+v.toLocaleString('en-US',{maximumFractionDigits:0}); }
+function snapLabel(p){
+  return p>=80?"Still open":p>=60?"Likely open":p>=40?"Uncertain":"Likely taken";
+}
+function snapColor(p){
+  return p>=80?"#1D9E75":p>=60?"#EF9F27":p>=40?"#EF9F27":"#E24B4A";
+}
+
+// ── LOAD DASHBOARD ──
+function loadDashboard() {
+  const limit = SESSION.protocols;
+  const visible = PROTOCOLS.slice(0, limit);
+  const urgent = PROTOCOLS.filter(p=>p.urgent).length;
+
+  document.getElementById('stat-above').textContent =
+    PROTOCOLS.filter(p=>p.conviction!=='SUPPRESS').length;
+  document.getElementById('stat-urgent').textContent = urgent;
+  document.getElementById('stat-updated').textContent =
+    new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+
+  const now = new Date();
+  document.getElementById('status-text').textContent =
+    `Live · ${visible.length} protocols loaded · ${urgent} urgent · `+
+    `Next data refresh in ${6 - (now.getHours()%6)}h`;
+  document.getElementById('footer-ts').textContent =
+    `Updated ${now.toLocaleString('en-GB')}`;
+
+  buildTable(visible);
+  loadBriefing(visible);
+  buildROI(visible.slice(0,6));
+  buildSnapshots(visible.slice(0,9));
+  buildHeatmap();
+  buildWhales();
+}
+
+// ── PROTOCOL TABLE ──
+function buildTable(protocols) {
+  let html = '';
+  protocols.forEach(p => {
+    const sc = p.score;
+    const scCol = scoreColor(sc);
+    const snapCol = snapColor(p.snapshotProb);
+    html += `<div class="protocol-row" onclick="showDetail(${PROTOCOLS.indexOf(p)})">
+      <span class="p-rank">${PROTOCOLS.indexOf(p)+1}</span>
+      <span class="p-name">${p.name}
+        ${p.urgent?`<span style="font-size:10px;background:#EAF3DE;color:#3B6D11;padding:1px 7px;border-radius:99px;margin-left:6px;">Urgent</span>`:''}
+      </span>
+      <span class="p-chain">${p.chain}</span>
+      <span class="p-tvl" style="color:${p.tvl?'var(--text)':'var(--text3)'};">${p.tvl||'—'}</span>
+      <div class="p-bar-wrap">
+        <div class="p-bar"><div class="p-fill" style="width:${sc}%;background:${scCol};"></div></div>
+        <span class="p-score" style="color:${scCol};">${sc}</span>
+      </div>
+      <span class="p-conv ${convClass(p.conviction)}">${p.conviction}</span>
+      <span class="p-snap" style="color:${snapCol};">${p.snapshotProb}%</span>
+    </div>`;
+  });
+
+  if(SESSION.protocols < 20) {
+    html += `<div style="text-align:center;padding:16px;font-size:13px;
+      color:var(--text3);background:var(--bg3);">
+      ${20-SESSION.protocols} more protocols on Pro tier —
+      <a href="index.html" style="color:var(--green);text-decoration:none;">
+      Upgrade to Pro £149/month</a>
+    </div>`;
+  }
+  document.getElementById('protocol-list').innerHTML = html;
+}
+
+function showDetail(idx) {
+  const p = PROTOCOLS[idx];
+  const sc = p.score;
+  const scCol = scoreColor(sc);
+  const FMAX = {timing:25,tvl:20,investors:20,team:15,social:5,onchain:15};
+  const FLABELS = {timing:'Timing',tvl:'TVL trajectory',investors:'Investors',
+                   team:'Team',social:'Social',onchain:'On-chain'};
+
+  let factorsHtml = '';
+  for(const [key,label] of Object.entries(FLABELS)) {
+    const val = p.factors[key]||0;
+    const mx = FMAX[key];
+    factorsHtml += `<div class="factor-row">
+      <span class="factor-label">${label}</span>
+      <div class="factor-bar"><div class="factor-fill"
+        style="width:${Math.round(val/mx*100)}%;background:${scCol};"></div></div>
+      <span class="factor-val">${val}/${mx}</span>
+    </div>`;
+  }
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="detail-name">${p.name}</div>
+    <div class="detail-chain">${p.chain}</div>
+    <div class="detail-score-row">
+      <span class="detail-score" style="color:${scCol};">${sc}</span>
+      <span class="detail-score-max">/100</span>
+      <span class="p-conv ${convClass(p.conviction)}"
+            style="margin-left:8px;">${p.conviction}</span>
+    </div>
+    <div class="detail-factors">${factorsHtml}</div>
+    <hr class="detail-divider">
+    <div class="detail-action-label">Farming action</div>
+    <div class="detail-action">${p.note}</div>
+    ${p.deadline?`<div class="detail-deadline">⚡ ${p.deadline}</div>`:''}
+    <hr class="detail-divider">
+    <div class="detail-action-label">Snapshot probability</div>
+    <div style="font-size:22px;font-weight:600;color:${snapColor(p.snapshotProb)};">
+      ${p.snapshotProb}%
+    </div>
+    <div style="font-size:12px;color:var(--text2);">${snapLabel(p.snapshotProb)}</div>
+  `;
+}
+
+// ── AI BRIEFING ──
+async function loadBriefing(protocols) {
+  const top5 = protocols.slice(0,5).map(p=>
+    `#${PROTOCOLS.indexOf(p)+1} ${p.name} (${p.chain}) score:${p.score} ${p.conviction}`
+  );
+  const urgent = protocols.filter(p=>p.urgent).map(p=>p.name);
+
+  document.getElementById('briefing-ts').textContent =
+    `Generated ${new Date().toLocaleString('en-GB')}`;
+
+  try {
+    const r = await fetch('https://rcloop-proxy.vercel.app/api/ai', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system: "You are Hunter Intelligence, an airdrop farming intelligence service. Write sharp, specific, actionable weekly briefings for serious crypto farmers. Plain text, no markdown, no bullet points.",
+        prompt: `Weekly briefing for ${new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}\n\nTop 5 protocols:\n${top5.join('\n')}\n\nUrgent this week: ${urgent.join(', ')||'None'}\n\nWrite 3 paragraphs:\n1. Most important signal this week and why\n2. Specific actions for next 7 days\n3. One underrated protocol most farmers are missing\n\nUnder 150 words. Sharp and specific.`
+      })
+    });
+    const d = await r.json();
+    const text = d.content?.[0]?.text || '';
+    if(text) {
+      const paras = text.split(/\n\n+/).filter(p=>p.trim());
+      document.getElementById('briefing-text').innerHTML =
+        paras.map(p=>`<p>${p.trim()}</p>`).join('');
+      return;
+    }
+  } catch(e) {}
+
+  document.getElementById('briefing-text').innerHTML =
+    `<p style="color:var(--text3);">AI briefing temporarily unavailable. Check back shortly.</p>`;
+}
+
+// ── ROI CALCULATOR ──
+const CHAIN_MULT = {eth:1,l2:0.02,polygon:0.01,bnb:0.05};
+function updateROI() {
+  const eth   = parseInt(document.getElementById('eth-price').value);
+  const gwei  = parseInt(document.getElementById('gas-gwei').value);
+  const wals  = parseInt(document.getElementById('wallets').value);
+  document.getElementById('eth-val').textContent    = '$'+eth.toLocaleString();
+  document.getElementById('gas-val').textContent    = gwei+' gwei';
+  document.getElementById('wallet-val').textContent = wals+' wallets';
+  buildROI(PROTOCOLS.slice(0,6), eth, gwei, wals);
+}
+
+function buildROI(protocols, eth=3800, gwei=28, wals=5) {
+  let html = '';
+  protocols.forEach(p => {
+    const mult     = CHAIN_MULT[p.chainKey]||1;
+    const perClaim = (p.gasUnits*gwei*1e-9)*eth*mult;
+    const monthly  = perClaim*12*wals;
+    const breakeven= monthly*6;
+    const beCol    = breakeven<500?"#1D9E75":breakeven<2000?"#EF9F27":"#E24B4A";
+    html += `<div class="roi-card">
+      <div class="roi-card-name">${p.name}</div>
+      <div class="roi-row"><span class="roi-label">Gas per claim</span>
+        <span>${fmtUSD(perClaim)}</span></div>
+      <div class="roi-row"><span class="roi-label">Monthly gas (${wals}w)</span>
+        <span>${fmtUSD(monthly)}</span></div>
+      <div class="roi-row"><span class="roi-label">Chain</span>
+        <span style="color:var(--text2);font-weight:400;">${p.chain}</span></div>
+      <div class="roi-breakeven" style="background:var(--bg3);">
+        <span style="font-size:12px;color:var(--text2);">Break-even:</span>
+        <span style="font-weight:600;color:${beCol};">${fmtUSD(breakeven)}</span>
+      </div>
+    </div>`;
+  });
+  document.getElementById('roi-grid').innerHTML = html;
+}
+
+// ── SNAPSHOT PROBABILITY ──
+function buildSnapshots(protocols) {
+  let html = '';
+  protocols.forEach(p => {
+    const prob = p.snapshotProb;
+    const col  = snapColor(prob);
+    const bg   = prob>=80?"#E1F5EE":prob>=60?"#FAEEDA":prob>=40?"#FAEEDA":"#FCEBEB";
+    const sigs = [];
+    if(p.urgent)                 sigs.push({c:"#1D9E75",t:"Active deadline signal"});
+    if(p.factors.onchain>=7)     sigs.push({c:"#1D9E75",t:"High on-chain activity"});
+    if(p.factors.timing>=19)     sigs.push({c:"#1D9E75",t:"Early in launch window"});
+    if(prob<50)                  sigs.push({c:"#E24B4A",t:"Team comms quiet"});
+    if(!sigs.length)             sigs.push({c:"#9a9994",t:"Monitoring signals"});
+    html += `<div class="snap-card">
+      <div class="snap-name">${p.name}</div>
+      <div class="snap-prob-row">
+        <div class="snap-circle" style="background:${bg};color:${col};">${prob}%</div>
+        <div class="snap-text"><strong style="color:${col};">${snapLabel(prob)}</strong><br>snapshot probability</div>
+      </div>
+      <div class="snap-signals">${sigs.slice(0,3).map(s=>
+        `<div class="snap-signal"><div class="snap-dot" style="background:${s.c};"></div>${s.t}</div>`
+      ).join('')}</div>
+    </div>`;
+  });
+  document.getElementById('snap-grid').innerHTML = html;
+}
+
+// ── CORRELATION HEATMAP ──
+function buildHeatmap() {
+  const short = ["MDN","METH","MON","BASE","POLY","MRPH","ASTR","HYPL","META","AERO"];
+  const corr  = [
+    [1.00,0.82,0.78,0.41,0.22,0.18,0.31,0.29,0.15,0.38],
+    [0.82,1.00,0.85,0.45,0.28,0.21,0.35,0.33,0.18,0.42],
+    [0.78,0.85,1.00,0.49,0.31,0.24,0.38,0.36,0.20,0.46],
+    [0.41,0.45,0.49,1.00,0.68,0.72,0.44,0.61,0.55,0.88],
+    [0.22,0.28,0.31,0.68,1.00,0.58,0.29,0.51,0.45,0.62],
+    [0.18,0.21,0.24,0.72,0.58,1.00,0.25,0.48,0.41,0.69],
+    [0.31,0.35,0.38,0.44,0.29,0.25,1.00,0.32,0.28,0.41],
+    [0.29,0.33,0.36,0.61,0.51,0.48,0.32,1.00,0.39,0.58],
+    [0.15,0.18,0.20,0.55,0.45,0.41,0.28,0.39,1.00,0.51],
+    [0.38,0.42,0.46,0.88,0.62,0.69,0.41,0.58,0.51,1.00],
+  ];
+  function cellStyle(v) {
+    if(v>=0.8)  return "background:#0F6E56;color:#E1F5EE;";
+    if(v>=0.6)  return "background:#9FE1CB;color:#085041;";
+    if(v>=0.4)  return "background:#E1F5EE;color:#085041;";
+    if(v>=0.2)  return "background:var(--bg3);color:var(--text3);";
+    return "background:#FAEEDA;color:#854F0B;";
+  }
+  let t = `<table class="heatmap"><thead><tr><th></th>${short.map(s=>`<th>${s}</th>`).join('')}</tr></thead><tbody>`;
+  corr.forEach((row,i) => {
+    t += `<tr><th class="row-hdr">${short[i]}</th>`;
+    row.forEach((v,j) => {
+      t += `<td style="${cellStyle(v)}">${i===j?'—':v.toFixed(2)}</td>`;
+    });
+    t += '</tr>';
+  });
+  t += '</tbody></table>';
+  document.getElementById('heatmap').innerHTML = t;
+}
+
+// ── WHALE TRACKER ──
+function buildWhales() {
+  const events = [
+    {icon:"🐋",proto:"Miden",action:"First interaction — deployed test contract",
+     addr:"0x7a3f...d291",time:"2h ago",sig:"strong",
+     detail:"Wallet with 14 successful airdrop claims entered Miden testnet for first time."},
+    {icon:"🐋",proto:"MegaETH",action:"Daily check-in streak: 47 days",
+     addr:"0x2c81...f047",time:"6h ago",sig:"strong",
+     detail:"Known high-value farmer maintaining longest streak in monitored set."},
+    {icon:"🐳",proto:"Glider",action:"First interaction — 3 wallets same day",
+     addr:"0x9e44...8b12",time:"11h ago",sig:"strong",
+     detail:"Three sophisticated wallets all entered Glider on the same day. Coordinated entry."},
+    {icon:"🐳",proto:"Variational",action:"Increased trading volume 4x",
+     addr:"0x1f5c...a339",time:"18h ago",sig:"moderate",
+     detail:"Wallet previously farming Arbitrum significantly increased Variational activity."},
+    {icon:"🐋",proto:"Superposition",action:"First liquidity provision",
+     addr:"0x8d2a...c773",time:"1d ago",sig:"strong",
+     detail:"Wallet with a16z-adjacent farming history entered Superposition. Notable."},
+    {icon:"🐳",proto:"Ink (Kraken)",action:"Bridge + dApp interaction pattern",
+     addr:"0x3b9e...2f81",time:"1d ago",sig:"moderate",
+     detail:"Systematic bridging across 8 wallets in a known farming cluster."},
+  ];
+  document.getElementById('whale-feed').innerHTML = events.map(e => `
+    <div class="whale-card">
+      <div class="whale-icon">${e.icon}</div>
+      <div class="whale-body">
+        <div class="whale-title">${e.proto} — ${e.action}</div>
+        <div class="whale-detail">${e.detail}</div>
+        <div class="whale-addr">${e.addr}</div>
+      </div>
+      <div class="whale-meta">
+        <div class="whale-time">${e.time}</div>
+        <div class="whale-sig ${e.sig==='strong'?'sig-strong':'sig-mod'}">
+          ${e.sig==='strong'?'Strong signal':'Moderate signal'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── TAB SWITCHING ──
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+  if(id==='roi') updateROI();
+}
+
+// ── INIT ──
+if(checkExistingSession()) {
+  showDashboard();
+} else {
+  document.getElementById('login-page').style.display='flex';
+}
+</script>
+</body>
+</html>
