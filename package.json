@@ -1,9 +1,8 @@
 {
-  "name": "hunter-webhook",
+  "name": "hunter-dashboard",
   "version": "1.0.0",
-  "description": "Hunter Intelligence Stripe webhook",
+  "private": true,
   "dependencies": {
-    "stripe": "^14.0.0",
-    "resend": "^3.0.0"
+    "stripe": "^14.0.0"
   }
 }
