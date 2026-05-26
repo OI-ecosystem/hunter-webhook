@@ -619,7 +619,6 @@ async function validateCode() {
     };
     localStorage.setItem('hunter_session', JSON.stringify(SESSION));
     showDashboard();
-    startAutoRefresh();
 
   } catch(e) {
     err.style.display='block';
@@ -978,56 +977,12 @@ function switchTab(id, btn) {
 }
 
 // ── AUTO-REFRESH ──
-// Checks Vercel every 30 mins for new data — silently updates if scores have changed
-let lastDataTimestamp = null;
-const DATA_URL = 'https://rcloop-proxy.vercel.app/api/scores';
-
-async function checkForUpdates() {
-  if(!SESSION) return; // Not logged in — skip
-  try {
-    const res = await fetch(DATA_URL + '?_=' + Date.now()); // bust cache
-    if(!res.ok) return;
-    const data = await res.json();
-    const ts = data?.generated_at || data?.timestamp || null;
-    if(!ts) return;
-    if(lastDataTimestamp && ts !== lastDataTimestamp) {
-      // New data available — silently reload dashboard
-      console.log('Hunter: new data detected, refreshing...');
-      lastDataTimestamp = ts;
-      loadDashboard();
-      showUpdateNotice();
-    } else if(!lastDataTimestamp) {
-      lastDataTimestamp = ts; // First load — just store timestamp
-    }
-  } catch(e) {
-    // Silently fail — no alert to user
-  }
-}
-
-function showUpdateNotice() {
-  const bar = document.getElementById('status-bar');
-  if(!bar) return;
-  const orig = bar.textContent;
-  bar.style.background = '#0F6E56';
-  bar.style.color = '#9FE1CB';
-  bar.textContent = '✓ Dashboard updated with latest scores';
-  setTimeout(() => {
-    bar.style.background = '';
-    bar.style.color = '';
-    loadDashboard(); // Restores normal status text
-  }, 4000);
-}
-
-// Start auto-refresh — check every 30 minutes
-function startAutoRefresh() {
-  checkForUpdates(); // Check immediately on load
-  setInterval(checkForUpdates, 30 * 60 * 1000); // Then every 30 mins
-}
+// Reloads page every 30 minutes — session persists via localStorage
+setInterval(() => location.reload(), 30 * 60 * 1000);
 
 // ── INIT ──
 if(checkExistingSession()) {
   showDashboard();
-  startAutoRefresh();
 } else {
   document.getElementById('login-page').style.display='flex';
 }
